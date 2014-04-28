@@ -9,8 +9,6 @@ import org.threadly.concurrent.SameThreadSubmitterExecutor;
 import org.threadly.concurrent.future.FutureCallback;
 import org.threadly.concurrent.future.ListenableFuture;
 
-import com.google.common.util.concurrent.Futures;
-
 /**
  * <p>Used to bridge between threadly's Future tools and guava's.  For example 
  * you can convert between threadly's {@link org.threadly.concurrent.future.ListenableFuture} 
@@ -115,12 +113,15 @@ public class FutureBridge {
 
     @Override
     public void addCallback(FutureCallback<? super T> callback) {
-      Futures.addCallback(guavaListenableFuture, transformIntoGuava(callback));
+      com.google.common.util.concurrent.Futures.addCallback(guavaListenableFuture, 
+                                                            transformIntoGuava(callback));
     }
 
     @Override
     public void addCallback(FutureCallback<? super T> callback, Executor executor) {
-      Futures.addCallback(guavaListenableFuture, transformIntoGuava(callback), executor);
+      com.google.common.util.concurrent.Futures.addCallback(guavaListenableFuture, 
+                                                            transformIntoGuava(callback), 
+                                                            executor);
     }
   }
   
