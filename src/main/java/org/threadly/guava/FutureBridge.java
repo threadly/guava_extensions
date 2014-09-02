@@ -27,6 +27,7 @@ public class FutureBridge {
    * Converts a guava ListenableFuture into a threadly implemented one.
    * 
    * @param guavaListenableFuture the source guava ListenableFuture
+   * @param <T> Type returned by the future's .get() call
    * @return a threadly ListenableFuture implementation 
    */
   public static <T> ListenableFuture<T> transformIntoThreadly(com.google.common.util.concurrent.ListenableFuture<T> guavaListenableFuture) {
@@ -37,9 +38,10 @@ public class FutureBridge {
    * Converts a threadly ListenableFuture into a guava implemented one.
    * 
    * @param threadlyListenableFuture the source threadly ListenableFuture
+   * @param <T> Type returned by the future's .get() call
    * @return a guava ListenableFuture implementation 
    */
-  public static <T> com.google.common.util.concurrent.ListenableFuture<T> transformIntoGuava(ListenableFuture<T> threadlyListenableFuture) {
+  public static <T> com.google.common.util.concurrent.ListenableFuture<T> transformIntoGuava(ListenableFuture<? extends T> threadlyListenableFuture) {
     return new GuavaFuture<T>(threadlyListenableFuture);
   }
 
@@ -47,9 +49,10 @@ public class FutureBridge {
    * Converts a guava FutureCallback into a threadly implemented one.
    * 
    * @param guavaFutureCallback the source guava FutureCallback
+   * @param <T> Type of result returned to callback
    * @return a threadly FutureCallback implementation 
    */
-  public static <T> FutureCallback<T> transformIntoThreadly(com.google.common.util.concurrent.FutureCallback<T> guavaFutureCallback) {
+  public static <T> FutureCallback<T> transformIntoThreadly(com.google.common.util.concurrent.FutureCallback<? super T> guavaFutureCallback) {
     return new ThreadlyFutureCallback<T>(guavaFutureCallback);
   }
 
@@ -57,14 +60,21 @@ public class FutureBridge {
    * Converts a threadly FutureCallback into a guava implemented one.
    * 
    * @param threadlyFutureCallback the source threadly FutureCallback
+   * @param <T> Type of result returned to callback
    * @return a guava FutureCallback implementation 
    */
-  public static <T> com.google.common.util.concurrent.FutureCallback<T> transformIntoGuava(FutureCallback<T> threadlyFutureCallback) {
+  public static <T> com.google.common.util.concurrent.FutureCallback<T> transformIntoGuava(FutureCallback<? super T> threadlyFutureCallback) {
     return new GuavaFutureCallback<T>(threadlyFutureCallback);
   }
   
+  /**
+   * <p>Threadly implementation which defers to a guava future.</p>
+   * 
+   * @author jent - Mike Jensen
+   * @param <T> Type returned by the future's .get() call
+   */
   protected static class ThreadlyFuture<T> implements ListenableFuture<T> {
-    private final com.google.common.util.concurrent.ListenableFuture<T> guavaListenableFuture;
+    protected final com.google.common.util.concurrent.ListenableFuture<T> guavaListenableFuture;
     
     public ThreadlyFuture(com.google.common.util.concurrent.ListenableFuture<T> guavaListenableFuture) {
       if (guavaListenableFuture == null) {
@@ -125,10 +135,16 @@ public class FutureBridge {
     }
   }
   
+  /**
+   * <p>Guava implementation which defers to a threadly future.</p>
+   * 
+   * @author jent - Mike Jensen
+   * @param <T> Type returned by the future's .get() call
+   */
   protected static class GuavaFuture<T> implements com.google.common.util.concurrent.ListenableFuture<T> {
-    private final ListenableFuture<T> threadlyListenableFuture;
+    protected final ListenableFuture<? extends T> threadlyListenableFuture;
     
-    public GuavaFuture(ListenableFuture<T> threadlyListenableFuture) {
+    public GuavaFuture(ListenableFuture<? extends T> threadlyListenableFuture) {
       if (threadlyListenableFuture == null) {
         throw new IllegalArgumentException("Must supply future");
       }
@@ -169,10 +185,16 @@ public class FutureBridge {
     }
   }
   
+  /**
+   * <p>Threadly implementation which defers to a guava callback.</p>
+   * 
+   * @author jent - Mike Jensen
+   * @param <T> Type of result returned to callback
+   */
   protected static class ThreadlyFutureCallback<T> implements FutureCallback<T> {
-    private final com.google.common.util.concurrent.FutureCallback<T> guavaFutureCallback;
+    protected final com.google.common.util.concurrent.FutureCallback<? super T> guavaFutureCallback;
     
-    public ThreadlyFutureCallback(com.google.common.util.concurrent.FutureCallback<T> guavaFutureCallback) {
+    public ThreadlyFutureCallback(com.google.common.util.concurrent.FutureCallback<? super T> guavaFutureCallback) {
       if (guavaFutureCallback == null) {
         throw new IllegalArgumentException("Must supply callback");
       }
@@ -191,10 +213,16 @@ public class FutureBridge {
     }
   }
   
+  /**
+   * <p>Guava implementation which defers to a threadly callback.</p>
+   * 
+   * @author jent - Mike Jensen
+   * @param <T> Type of result returned to callback
+   */
   protected static class GuavaFutureCallback<T> implements com.google.common.util.concurrent.FutureCallback<T> {
-    private final FutureCallback<T> threadlyFutureCallback;
+    protected final FutureCallback<? super T> threadlyFutureCallback;
     
-    public GuavaFutureCallback(FutureCallback<T> threadlyFutureCallback) {
+    public GuavaFutureCallback(FutureCallback<? super T> threadlyFutureCallback) {
       if (threadlyFutureCallback == null) {
         throw new IllegalArgumentException("Must supply callback");
       }
